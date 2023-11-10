@@ -1,0 +1,435 @@
+---
+title: "Task3 Spark Foundation"
+author: "Sannidhya Das"
+date: '2023-11-10'
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Domain : Data Science and Business Analytics
+## Batch : GRIPNOVEMBER23
+
+ Setting the working directory and loading Dataset
+```{r}
+getwd()
+setwd("C:/Users/sanni/OneDrive/Documents/Internship projects/Spark Foundation/Task3")
+task3=read.csv("SampleSuperstore.csv")
+```
+
+Checking the dataset 
+```{r}
+head(task3)
+tail(task3)
+```
+Summary of the dataset 
+```{r}
+summary(task3)
+str(task3)
+dim(task3)
+colnames(task3)
+```
+Checking is there is any null values in any columns 
+```{r}
+colSums(is.na(task3))
+```
+
+Checking the dataset for duplicates and dropping the duplicate elements using unique() 
+
+```{r}
+sum(duplicated(task3))
+task3=unique(task3)
+```
+
+Finding the correlation and covariance of dataset using cor()and cov() method
+
+```{r}
+cor(task3[,c("Sales","Quantity","Discount","Profit")])
+cov(task3[,c("Sales","Quantity","Discount","Profit")])
+
+```
+
+ Group the data by multiple columns and calculate the sum of Quantity, Discount, Sales, and Profit
+
+```{r}
+grouped <- aggregate(cbind(Quantity, Discount, Sales, Profit) ~ Ship.Mode + Segment + Category + 
+                       Sub.Category+ State + Region,
+                     data = task3, sum)
+```
+
+ Print the grouped data
+```{r}
+head(grouped)
+```
+ 
+ Group the data by State and calculate the sum, mean, min, max, count, median, standard deviation, and variance of Profit
+
+```{r}
+
+library(magrittr)
+library(dplyr)
+profit_summary <- task3%>% 
+  group_by(State) %>% 
+  summarise(sum = sum(Profit), mean = mean(Profit), min = min(Profit), max = max(Profit), count = n(),
+            median = median(Profit), std = sd(Profit), var = var(Profit))
+
+```
+ Print the summary statistics of Profit by State
+```{r}
+profit_summary
+```
+
+## Visualization of dataset
+
+```{r}
+library(ggplot2)
+ggplot(task3, aes(x = Sub.Category, y = Category)) + 
+  geom_bar(stat = "identity", fill = "steelblue") + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + 
+  ggtitle("Bar plot of Sub-Category vs Category") + 
+  xlab("Sub-Category") + 
+  ylab("Category")
+
+```
+# Note : 
+Binders are purchased maximum times from the store followed by papers and phones .
+
+```{r}
+library(dplyr)
+
+task3 %>%
+  count(State) %>%
+  ggplot(aes(x = State, y = n)) +
+  geom_bar(stat = "identity", fill = "royalblue") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  ggtitle("Count of States") +
+  xlab("State") +
+  ylab("Count")
+
+```
+
+# Note :
+Products are very often ordered from California , New York and Texus .
+
+## Heatmap plot
+```{r}
+library(reshape2)
+
+# Creating a correlation matrix
+corr <- cor(task3[,c("Sales","Quantity","Discount","Profit")])
+
+# Creating a heatmap with annotations
+ggplot(melt(corr), aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red", midpoint = 0) +
+  geom_text(aes(label = round(value, 2)), color = "black", size = 3) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+  ggtitle("Correlation Matrix") +
+  xlab("Variables") +
+  ylab("Variables")
+
+# Creating a covariance matrix
+cov <- cov(task3[,c("Sales","Quantity","Discount","Profit")])
+
+# Creating a heatmap with annotations
+ggplot(melt(cov), aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red", midpoint = 0) +
+  geom_text(aes(label = round(value, 2)), color = "black", size = 3) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+  ggtitle("Covariance Matrix") +
+  xlab("Variables") +
+  ylab("Variables")
+
+```
+
+# Note: 
+ 1.There is a positive Correlation between Sales and   
+  profit.(Sales Increase Profit Increases)
+
+ 2.There is a positive Correlation between Quantity and  
+ Profit.(Quantity Increase Profit Increases)
+
+ 3.There is a Negetive Correlation between Profit and
+ Discount.(Discount Increase Profit Dicreases)
+
+ 4.There is Negative Correlation between Sales and
+ Discount.(Sales Increase Discount Decreases)
+
+ 5.There is Nearly no Correlation between Quantity and
+ Discount.(0 Correlation)
+
+
+
+Creating a count plot
+```{r}
+
+ggplot(task3, aes(x = Segment, fill = Segment)) +
+  geom_bar() +
+  scale_fill_manual(values = c("red", "forestgreen", "steelblue")) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+  ggtitle("Count of Segments") +
+  xlab("Segment") +
+  ylab("Count")
+```
+
+
+```{r}
+ggplot(task3, aes(x = Region, fill = Region)) +
+  geom_bar() +
+  scale_fill_manual(values = c("red", "forestgreen", "steelblue","goldenrod")) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+  ggtitle("Count of Region") +
+  xlab("Region") +
+  ylab("Count")
+```
+
+# Note :
+People from Western region orders more products from this store than East , Central and South .
+
+
+```{r}
+ggplot(task3, aes(x = Ship.Mode, fill = Ship.Mode)) +
+  geom_bar() +
+  scale_fill_manual(values = c("red", "forestgreen", "steelblue","goldenrod")) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+  ggtitle("Count of Ship Mode") +
+  xlab("Ship Mode") +
+  ylab("Count")
+```
+
+# Note : 
+When purchasing goods from the store, most customers choose Standard class shipment. 
+
+```{r}
+ggplot(task3, aes(x = Category, fill = Category)) +
+  geom_bar() +
+  scale_fill_manual(values = c("forestgreen", "steelblue","goldenrod")) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+  ggtitle("Count of Category") +
+  xlab("Category") +
+  ylab("Count")
+
+```
+
+# Note :
+People prefers to purchase Office supplies than tech and furniture goods .
+
+
+# Profit Associated with Sub-Category
+```{r}
+profit_SubCategory <- aggregate(Profit ~ Sub.Category, data = task3, FUN = sum)
+
+ggplot(profit_SubCategory, aes(x = Sub.Category, y = Profit)) +
+  geom_bar(stat = "identity",fill="Maroon") +
+  labs(x = "Sub-Category", y = "Profit" ) +
+  ggtitle("Profitable Sub-Category") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) 
+```
+
+#  Note :
+ From the above it is clear that Copies gives the maximum profit  to the store . 
+
+# Profit Associated with Segment 
+```{r}
+profit_Segment <- aggregate(Profit ~ Segment, data = task3, FUN = sum)
+
+ggplot(profit_Segment, aes(x = Segment, y = Profit)) +
+  geom_bar(stat = "identity",fill= "brown") +
+  facet_wrap(~ Segment, scales = "free_x") +
+  labs(x = "Segment", y = "Profit") +
+  ggtitle("Profitable Segment") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+#  Note: 
+Consumer give the most profit
+
+
+# Profit in Association with states 
+```{r}
+profit_states <- aggregate(Profit ~ State, data = task3, FUN = sum)
+
+ggplot(profit_states, aes(x = State, y = Profit)) +
+  geom_bar(stat = "identity",fill="red") +
+  labs(x = "State", y = "Profit") +
+  ggtitle("Profit in each States")  +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+
+```
+
+#  Note:
+California gives maximum profit followed by New York.
+
+
+Creating a box plot with different colors for different bars
+```{r}
+ggplot(task3, aes(x = Sub.Category, y = Profit, fill = Sub.Category)) +
+  geom_boxplot() +
+  scale_fill_manual(values = c("red", "green", "blue", "orange","pink","steelblue","lightgreen","gold","purple","maroon","tan","cadetblue","tomato","orchid","navy","gainsboro","indianred")) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+  ggtitle("Profit by Sub-Category") +
+  xlab("Sub-Category") +
+  ylab("Profit")
+```
+
+Creating a point plot with different colors for different lines
+```{r}
+ggplot(task3, aes(x = Discount, y = Profit, color = Sub.Category)) +
+  geom_point() + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+  ggtitle("Profit by Discount") +
+  xlab("Discount") +
+  ylab("Profit")
+```
+
+Boxplot of Discount
+```{r}
+ggplot(task3, aes(x = "", y = Discount)) +
+  geom_boxplot(color="steelblue") +
+  theme(axis.text.x = element_blank(), axis.title.x = element_blank()) +
+  ggtitle("Box Plot of Discount") +
+  ylab("Discount")
+```
+
+Boxplot of profit
+```{r}
+ggplot(task3, aes(x = "", y = Profit)) +
+  geom_boxplot(color="steelblue") +
+  theme(axis.text.x = element_blank(), axis.title.x = element_blank()) +
+  ggtitle("Box Plot of Profit") +
+  ylab("Profit")
+```
+
+Distribution Plot
+```{r}
+summary(task3$Sales)
+
+# Creating a histogram of Sales
+hist(task3$Sales, col = "steelblue", breaks = 100, main = "Histogram of Sales", xlab = "Sales", 
+     ylab = "Frequency",xlim = c(0,3000))
+
+```
+
+Scatter plot of sales 
+```{r}
+ggplot(task3, aes(x = Sales, y = Profit)) +
+  geom_point(color="seagreen") +
+  labs(x = "Sales", y = "Profit") +
+  ggtitle("Scatter plot of Sales vs. Profit")
+
+```
+
+Histogram of all quantitative variables 
+```{r}
+library(tidyr)
+h <- gather(task3, key = "variable", value = "value", Sales:Profit)
+
+ggplot(h, aes(x = value)) +
+  geom_histogram(bins = 50) +
+  facet_wrap(~ variable, scales = "free_x") +
+  labs(x = "Value", y = "Frequency") +
+  ggtitle("Histogram of Sales, Quantity, Discount, and Profit")
+
+
+```
+
+# Segment*Region wise profit
+```{r}
+plot1 <- aggregate(Profit ~ Region + Segment, data = task3, FUN = sum)
+
+ggplot(plot1, aes(x = Region, y = Profit, fill = Segment)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Region", y = "Profit", title = "Comparison of Profit by Region and Segment")  +
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+# Note :
+Central Region has Less number of consumers
+
+# Profit associated with different categories 
+```{r}
+plot2 <- aggregate(Profit ~ Region + Category, data = task3, FUN = sum)
+
+ggplot(plot2, aes(x = Region, y = Profit, fill = Category)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Region", y = "Profit", title = "Comparison of Profit by Region and Category") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+# Note:
+1.Sale of furniture is significantly low in Central and Eastern Regions.
+
+2.There is very low office supply in Central Region.
+
+# Lineplots 
+# 1.Profit vs Quantity 
+```{r}
+plot3 <- aggregate(Profit ~ Quantity, data = task3, FUN = sum)
+
+ggplot(plot3, aes(x = Quantity, y = Profit)) +
+  geom_line(color = "steelblue") +
+  labs(x = "Quantity", y = "Profit", title = "Profit vs. Quantity") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+# Note:
+There is a Constant increment in Profit with the increase in Quantity
+
+# 2. Profit vs Discount 
+```{r}
+plot4 <- aggregate(Profit ~ Discount, data = task3, FUN = sum)
+
+ggplot(plot4, aes(x = Discount, y = Profit)) +
+  geom_line(color = "darkgreen") +
+  labs(x = "Discount", y = "Profit", title = "Profit vs. Discount") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+## Conclusion
+
+1. The superstore loses money when it offers discounts.
+
+2. However, they will lose out on sales and be unable to draw in new, loyal clients if they cease offering discounts.
+
+
+
+3. The shop offers discounts around holidays, end-of-season sales, and clearance sales in order to clear up room in their warehouses for new inventory.
+
+
+
+4. The business benefits in the long run by gaining more devoted clients by taking on little losses.
+
+
+
+5. A crucial aspect of the operation of the corporation is the little losses from discounts.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
